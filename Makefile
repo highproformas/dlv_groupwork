@@ -16,6 +16,29 @@ else
 HAS_CONDA=True
 endif
 
+ifeq (,$(shell which nvidia-docker))
+DOCKER=docker
+PLATFORM=cpu
+else
+DOCKER=nvidia-docker
+PLATFORM=gpu
+endif
+PROJECT_NAME=dlv
+DOCKERFILE=Dockerfile.$(PLATFORM)
+IMAGE_NAME=$(PROJECT_NAME)-image-$(PLATFORM)
+CONTAINER_NAME=$(PROJECT_NAME)-container-$(PLATFORM)
+PWD=`pwd`
+export JUPYTER_HOST_PORT=8888
+export JUPYTER_CONTAINER_PORT=8888
+export TENSORBOARD_HOST_PORT=6006
+export TENSORBOARD_CONTAINER_PORT=6006
+
+define START_DOCKER_CONTAINER
+if [ `$(DOCKER) inspect -f {{.State.Running}} $(CONTAINER_NAME)` = "false" ] ; then
+        $(DOCKER) start $(CONTAINER_NAME)
+fi
+endef
+
 #################################################################################
 # COMMANDS                                                                      #
 #################################################################################
@@ -37,22 +60,6 @@ clean:
 ## Lint using flake8
 lint:
 	flake8 src
-
-## Upload Data to S3
-sync_data_to_s3:
-ifeq (default,$(PROFILE))
-	aws s3 sync data/ s3://$(BUCKET)/data/
-else
-	aws s3 sync data/ s3://$(BUCKET)/data/ --profile $(PROFILE)
-endif
-
-## Download Data from S3
-sync_data_from_s3:
-ifeq (default,$(PROFILE))
-	aws s3 sync s3://$(BUCKET)/data/ data/
-else
-	aws s3 sync s3://$(BUCKET)/data/ data/ --profile $(PROFILE)
-endif
 
 ## Set up python interpreter environment
 create_environment:
@@ -80,6 +87,29 @@ test_environment:
 # PROJECT RULES                                                                 #
 #################################################################################
 
+init: init-docker create-container
+
+init-docker: ## initialize docker image
+	$(DOCKER) build -t $(IMAGE_NAME) -f $(DOCKERFILE) .
+
+create-container: ## create docker container
+	$(DOCKER) run -it -v $(PWD):/work -p $(JUPYTER_HOST_PORT):$(JUPYTER_CONTAINER_PORT) -p $(TENSORBOARD_HOST_PORT):$(TENSORBOARD_CONTAINER_PORT) --name $(CONTAINER_NAME) $(IMAGE_NAME)
+
+start-container: ## start docker container
+	@echo "$$START_DOCKER_CONTAINER" | $(SHELL)
+	@echo "Launched $(CONTAINER_NAME)..."
+	$(DOCKER) attach $(CONTAINER_NAME)
+
+jupyter: ## start Jupyter Notebook server
+	jupyter-notebook --allow-root --ip=0.0.0.0 --port=${JUPYTER_CONTAINER_PORT}
+
+clean-docker: clean-container clean-image ## remove Docker image and container
+
+clean-container: ## remove Docker container
+	-$(DOCKER) rm $(CONTAINER_NAME)
+
+clean-image: ## remove Docker image
+	-$(DOCKER) image rm $(IMAGE_NAME)
 
 
 #################################################################################
