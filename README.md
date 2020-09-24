@@ -3,6 +3,15 @@ DLV
 
 The DLV group project!
 
+How to run?
+------------
+
+1. Fetch GIT repository onto a unix based machine
+1. In a terminal enter ```make init```, this will setup your docker container
+1. One inside the docker container enter ```make juypter```, this will start the jupyter notebook server.
+1. You may now connect to the jupyter notebook server from outside.
+1. Note: If this is run on the SWITCHengine, you might want to reconnect to the SWITCHengine via SSH using the additional parameter ```-L 8888:localhost:8888``` in order to proxy the jupyter notebook port.
+
 Project Organization
 ------------
 
