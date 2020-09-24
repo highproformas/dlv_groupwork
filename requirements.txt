@@ -8,3 +8,6 @@ matplotlib
 jupyter
 jupyterlab
 notebook
+kaggle
+pandas
+sklearn

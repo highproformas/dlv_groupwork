@@ -1,5 +1,6 @@
 .PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3
 
+-include .env
 #################################################################################
 # GLOBALS                                                                       #
 #################################################################################
@@ -39,18 +40,14 @@ if [ `$(DOCKER) inspect -f {{.State.Running}} $(CONTAINER_NAME)` = "false" ] ; t
 fi
 endef
 
+
 #################################################################################
 # COMMANDS                                                                      #
 #################################################################################
 
-## Install Python Dependencies
-requirements: test_environment
-	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
-	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
-
 ## Make Dataset
-data: requirements
-	$(PYTHON_INTERPRETER) src/data/make_dataset.py data/raw data/processed
+data: 
+	$(PYTHON_INTERPRETER) src/data/make_dataset.py ./data/raw ./data/processed
 
 ## Delete all compiled Python files
 clean:
@@ -61,33 +58,12 @@ clean:
 lint:
 	flake8 src
 
-## Set up python interpreter environment
-create_environment:
-ifeq (True,$(HAS_CONDA))
-		@echo ">>> Detected conda, creating conda environment."
-ifeq (3,$(findstring 3,$(PYTHON_INTERPRETER)))
-	conda create --name $(PROJECT_NAME) python=3
-else
-	conda create --name $(PROJECT_NAME) python=2.7
-endif
-		@echo ">>> New conda env created. Activate with:\nsource activate $(PROJECT_NAME)"
-else
-	$(PYTHON_INTERPRETER) -m pip install -q virtualenv virtualenvwrapper
-	@echo ">>> Installing virtualenvwrapper if not already installed.\nMake sure the following lines are in shell startup file\n\
-	export WORKON_HOME=$$HOME/.virtualenvs\nexport PROJECT_HOME=$$HOME/Devel\nsource /usr/local/bin/virtualenvwrapper.sh\n"
-	@bash -c "source `which virtualenvwrapper.sh`;mkvirtualenv $(PROJECT_NAME) --python=$(PYTHON_INTERPRETER)"
-	@echo ">>> New virtualenv created. Activate with:\nworkon $(PROJECT_NAME)"
-endif
-
-## Test python environment is setup correctly
-test_environment:
-	$(PYTHON_INTERPRETER) test_environment.py
 
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################
 
-init: init-docker create-container
+init: clean-docker init-docker create-container
 
 init-docker: ## initialize docker image
 	$(DOCKER) build -t $(IMAGE_NAME) -f $(DOCKERFILE) .
@@ -110,6 +86,10 @@ clean-container: ## remove Docker container
 
 clean-image: ## remove Docker image
 	-$(DOCKER) image rm $(IMAGE_NAME)
+
+download-kaggle-data:
+	kaggle datasets download -d mlg-ulb/creditcardfraud -p ./data/external --unzip
+	cp ./data/external/* ./data/raw
 
 
 #################################################################################
