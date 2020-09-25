@@ -1,5 +1,6 @@
 .PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3
 
+-include .env
 #################################################################################
 # GLOBALS                                                                       #
 #################################################################################
@@ -39,18 +40,14 @@ if [ `$(DOCKER) inspect -f {{.State.Running}} $(CONTAINER_NAME)` = "false" ] ; t
 fi
 endef
 
+
 #################################################################################
 # COMMANDS                                                                      #
 #################################################################################
 
-## Install Python Dependencies
-requirements: test_environment
-	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
-	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
-
 ## Make Dataset
-data: requirements
-	$(PYTHON_INTERPRETER) src/data/make_dataset.py data/raw data/processed
+data: 
+	$(PYTHON_INTERPRETER) src/data/make_dataset.py ./data/raw ./data/processed
 
 ## Delete all compiled Python files
 clean:
@@ -61,55 +58,47 @@ clean:
 lint:
 	flake8 src
 
-## Set up python interpreter environment
-create_environment:
-ifeq (True,$(HAS_CONDA))
-		@echo ">>> Detected conda, creating conda environment."
-ifeq (3,$(findstring 3,$(PYTHON_INTERPRETER)))
-	conda create --name $(PROJECT_NAME) python=3
-else
-	conda create --name $(PROJECT_NAME) python=2.7
-endif
-		@echo ">>> New conda env created. Activate with:\nsource activate $(PROJECT_NAME)"
-else
-	$(PYTHON_INTERPRETER) -m pip install -q virtualenv virtualenvwrapper
-	@echo ">>> Installing virtualenvwrapper if not already installed.\nMake sure the following lines are in shell startup file\n\
-	export WORKON_HOME=$$HOME/.virtualenvs\nexport PROJECT_HOME=$$HOME/Devel\nsource /usr/local/bin/virtualenvwrapper.sh\n"
-	@bash -c "source `which virtualenvwrapper.sh`;mkvirtualenv $(PROJECT_NAME) --python=$(PYTHON_INTERPRETER)"
-	@echo ">>> New virtualenv created. Activate with:\nworkon $(PROJECT_NAME)"
-endif
-
-## Test python environment is setup correctly
-test_environment:
-	$(PYTHON_INTERPRETER) test_environment.py
 
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################
 
-init: init-docker create-container
+## init everything
+init: clean-docker init-docker create-container
 
-init-docker: ## initialize docker image
+## initialize docker image
+init-docker: 
 	$(DOCKER) build -t $(IMAGE_NAME) -f $(DOCKERFILE) .
 
-create-container: ## create docker container
+## create docker container
+create-container: 
 	$(DOCKER) run -it -v $(PWD):/work -p $(JUPYTER_HOST_PORT):$(JUPYTER_CONTAINER_PORT) -p $(TENSORBOARD_HOST_PORT):$(TENSORBOARD_CONTAINER_PORT) --name $(CONTAINER_NAME) $(IMAGE_NAME)
 
-start-container: ## start docker container
+## start docker container
+start-container: 
 	@echo "$$START_DOCKER_CONTAINER" | $(SHELL)
 	@echo "Launched $(CONTAINER_NAME)..."
 	$(DOCKER) attach $(CONTAINER_NAME)
 
-jupyter: ## start Jupyter Notebook server
+## start Jupyter Notebook server
+jupyter: 
 	jupyter-notebook --allow-root --ip=0.0.0.0 --port=${JUPYTER_CONTAINER_PORT}
 
-clean-docker: clean-container clean-image ## remove Docker image and container
+## remove Docker image and container
+clean-docker: clean-container clean-image 
 
-clean-container: ## remove Docker container
+## remove Docker container
+clean-container: 
 	-$(DOCKER) rm $(CONTAINER_NAME)
 
-clean-image: ## remove Docker image
+## remove Docker image
+clean-image: 
 	-$(DOCKER) image rm $(IMAGE_NAME)
+
+## download kaggle data
+download-kaggle-data:
+	kaggle datasets download -d mlg-ulb/creditcardfraud -p ./data/external --unzip
+	cp ./data/external/* ./data/raw
 
 
 #################################################################################

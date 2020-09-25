@@ -11,6 +11,11 @@ How to run?
 1. One inside the docker container enter ```make juypter```, this will start the jupyter notebook server.
 1. You may now connect to the jupyter notebook server from outside.
 1. Note: If this is run on the SWITCHengine, you might want to reconnect to the SWITCHengine via SSH using the additional parameter ```-L 8888:localhost:8888``` in order to proxy the jupyter notebook port.
+1. In order to download a kaggle dataset, go to Kaggle - My Account - API - Create New API Token. Extract the values from the JSON and place it in a .env file in this root.
+```
+export KAGGLE_USERNAME=datadinosaur
+export KAGGLE_KEY=xxxxxxxxxxxxxx
+```
 
 Project Organization
 ------------
