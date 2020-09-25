@@ -13,8 +13,8 @@ How to run?
 1. Note: If this is run on the SWITCHengine, you might want to reconnect to the SWITCHengine via SSH using the additional parameter ```-L 8888:localhost:8888``` in order to proxy the jupyter notebook port.
 1. In order to download a kaggle dataset, go to Kaggle - My Account - API - Create New API Token. Extract the values from the JSON and place it in a .env file in this root.
 ```
-KAGGLE_USERNAME=datadinosaur
-KAGGLE_KEY=xxxxxxxxxxxxxx
+export KAGGLE_USERNAME=datadinosaur
+export KAGGLE_KEY=xxxxxxxxxxxxxx
 ```
 
 Project Organization

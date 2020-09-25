@@ -11,3 +11,5 @@ notebook
 kaggle
 pandas
 sklearn
+imblearn
+keras

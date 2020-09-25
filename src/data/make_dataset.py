@@ -6,6 +6,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
+from imblearn.under_sampling import RandomUnderSampler
 
 
 @click.command()
@@ -22,6 +23,8 @@ def main(input_filepath, output_filepath):
     df = df.drop('Time',axis=1)
     X = df.drop('Class',axis=1).values 
     y = df['Class'].values
+    rus = RandomUnderSampler(random_state=SEED)
+    X, y = rus.fit_sample(X, y)
     X -= X.min(axis=0)
     X /= X.max(axis=0)
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=SEED, test_size=0.1)

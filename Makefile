@@ -63,30 +63,39 @@ lint:
 # PROJECT RULES                                                                 #
 #################################################################################
 
+## init everything
 init: clean-docker init-docker create-container
 
-init-docker: ## initialize docker image
+## initialize docker image
+init-docker: 
 	$(DOCKER) build -t $(IMAGE_NAME) -f $(DOCKERFILE) .
 
-create-container: ## create docker container
+## create docker container
+create-container: 
 	$(DOCKER) run -it -v $(PWD):/work -p $(JUPYTER_HOST_PORT):$(JUPYTER_CONTAINER_PORT) -p $(TENSORBOARD_HOST_PORT):$(TENSORBOARD_CONTAINER_PORT) --name $(CONTAINER_NAME) $(IMAGE_NAME)
 
-start-container: ## start docker container
+## start docker container
+start-container: 
 	@echo "$$START_DOCKER_CONTAINER" | $(SHELL)
 	@echo "Launched $(CONTAINER_NAME)..."
 	$(DOCKER) attach $(CONTAINER_NAME)
 
-jupyter: ## start Jupyter Notebook server
+## start Jupyter Notebook server
+jupyter: 
 	jupyter-notebook --allow-root --ip=0.0.0.0 --port=${JUPYTER_CONTAINER_PORT}
 
-clean-docker: clean-container clean-image ## remove Docker image and container
+## remove Docker image and container
+clean-docker: clean-container clean-image 
 
-clean-container: ## remove Docker container
+## remove Docker container
+clean-container: 
 	-$(DOCKER) rm $(CONTAINER_NAME)
 
-clean-image: ## remove Docker image
+## remove Docker image
+clean-image: 
 	-$(DOCKER) image rm $(IMAGE_NAME)
 
+## download kaggle data
 download-kaggle-data:
 	kaggle datasets download -d mlg-ulb/creditcardfraud -p ./data/external --unzip
 	cp ./data/external/* ./data/raw
