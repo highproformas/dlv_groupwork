@@ -152,7 +152,11 @@ def train(X_train,y_train,
             f1 = f1_score(y_test,y_pred)
             print('Epoch: {}, F1: {:.5f}, F1P: {}'.format(epoch,f1,len(f1_progress)))
             f1_progress.append(f1)
-            
+    project_dir = Path(__file__).resolve().parents[2]
+    model_dir = project_dir.joinpath('models')
+    discriminator.save(model_dir.joinpath('discriminator.h5').as_posix())
+    generator.save(model_dir.joinpath('generator.h5').as_posix())
+    combined.save(model_dir.joinpath('combined.h5').as_posix())
     return f1_progress
 
 def plot_progress(f1_progress):
