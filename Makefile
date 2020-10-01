@@ -85,7 +85,7 @@ jupyter:
 	jupyter-notebook --allow-root --ip=0.0.0.0 --port=${JUPYTER_CONTAINER_PORT}
 
 ## remove Docker image and container
-clean-docker: clean-container clean-image 
+clean-docker: clean-container
 
 ## remove Docker container
 clean-container: 
