@@ -1,6 +1,7 @@
-FROM tensorflow/tensorflow:2.3.0
+FROM tensorflow/tensorflow:2.3.1
 
 COPY ./requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt
 
 WORKDIR /work
+CMD ["make", "jupyter"]

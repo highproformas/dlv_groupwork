@@ -64,7 +64,7 @@ lint:
 #################################################################################
 
 ## init everything
-init: clean-docker init-docker create-container
+init: clean-docker init-docker create-container start-container
 
 ## initialize docker image
 init-docker: 
@@ -72,7 +72,7 @@ init-docker:
 
 ## create docker container
 create-container: 
-	$(DOCKER) run -it -v $(PWD):/work -p $(JUPYTER_HOST_PORT):$(JUPYTER_CONTAINER_PORT) -p $(TENSORBOARD_HOST_PORT):$(TENSORBOARD_CONTAINER_PORT) --name $(CONTAINER_NAME) $(IMAGE_NAME)
+	$(DOCKER) run -t -d $(FLAGS)-v $(PWD):/work -p $(JUPYTER_HOST_PORT):$(JUPYTER_CONTAINER_PORT) -p $(TENSORBOARD_HOST_PORT):$(TENSORBOARD_CONTAINER_PORT) --name $(CONTAINER_NAME) $(IMAGE_NAME)
 
 ## start docker container
 start-container: 
@@ -80,12 +80,19 @@ start-container:
 	@echo "Launched $(CONTAINER_NAME)..."
 	$(DOCKER) attach $(CONTAINER_NAME)
 
-## start Jupyter Notebook server
+## start Jupyter Lab server
 jupyter: 
-	jupyter-notebook --allow-root --ip=0.0.0.0 --port=${JUPYTER_CONTAINER_PORT}
+	jupyter-lab --allow-root --ip=0.0.0.0 --port=${JUPYTER_CONTAINER_PORT}
+
+## fix versions
+pip-freeze:
+	pip freeze > ./requirements.txt
 
 ## remove Docker image and container
-clean-docker: clean-container
+clean-docker: clean-container 
+
+## there will be dragons
+clean-docker-full-only-in-emergency: clean-container clean-image 
 
 ## remove Docker container
 clean-container: 
