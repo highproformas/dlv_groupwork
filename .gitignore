@@ -1,4 +1,5 @@
 # Custom
+log/
 notebooks/Check Setup.ipynb
 kaggle.json
 .env
