@@ -14,3 +14,4 @@ sklearn
 imblearn
 keras
 seaborn
+opencv-python

@@ -1,12 +1,11 @@
 .PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3
 
--include .env
+
 #################################################################################
 # GLOBALS                                                                       #
 #################################################################################
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-BUCKET = [OPTIONAL] your-bucket-for-syncing-data (do not include 's3://')
 PROFILE = default
 PROJECT_NAME = dlv_groupwork
 PYTHON_INTERPRETER = python3
@@ -101,11 +100,6 @@ clean-container:
 ## remove Docker image
 clean-image: 
 	-$(DOCKER) image rm $(IMAGE_NAME)
-
-## download kaggle data
-download-kaggle-data:
-	kaggle datasets download -d mlg-ulb/creditcardfraud -p ./data/external --unzip
-	cp ./data/external/* ./data/raw
 
 
 #################################################################################
